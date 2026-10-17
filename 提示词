@@ -1,0 +1,27 @@
+项目：新建操作系统 WinLindroidHammeriOS，兼容 Windows exe、Mac app/dmg、Linux deb、Android apk、鸿蒙、iOS 应用；作为全新自主 OS，非套壳。
+
+语言/运行时：原生支持 Java、Python、C++、C#、Rust、Go、Node.js；原生运行各应用，非转译层；可在 arm64 等架构上流畅运行其他架构应用。
+
+硬件/驱动：支持 x86_64、x64、arm64、x32、RISC-V、LoongArch；支持各类驱动、热插拔、签名验证、用户态驱动；覆盖 NVIDIA/AMD/Intel 显卡；支持手机陀螺仪、加速度计、光线、指纹、NFC、GPS、蓝牙、Wi-Fi 6/7、5G；支持触屏、手写笔、压感、多指手势。
+
+启动：兼容性最优；支持 BIOS、UEFI；自研新 bootloader；可在嵌入式/集成设备运行；支持 Secure Boot、TPM 2.0、PXE、A/B 无缝升级回滚。
+
+权限（五级）：① SuperRoot 除内核热替换外一切可做；② Root 大部分更改；③ Admin 部分更改；④ User 仅个性化与无影响更改，不被上层限制；⑤ Restricted 沙盒、几无更改。要求权限细致分权，基于 Capability 细粒度授权（相机/麦克风/位置/目录等），支持临时/单次/永久三档，变更审计日志，企业 MDM，用户可调是否每次提醒。
+
+安全：沙盒 + 自带防毒，不打扰用户；内核级 MAC（SELinux/AppArmor 思路）；FDE + FBE；安全启动链；应用与数据隔离；反勒索/反钓鱼/反挖矿；隐私仪表盘。
+
+界面/体验：简洁、现代、自定义高，优于其他 OS 用户习惯；暗/亮/自动主题；多桌面、多任务、分屏、画中画；手势+快捷键+语音；无障碍（读屏/字幕/色盲/大字体）；i18n（简繁英日韩阿 RTL）；≥120fps。
+
+性能：资源占用低、效率高；冷启动 ≤5s（SSD）；空闲内存 ≤500MB；按需加载/延迟启动/后台冻结；性能/均衡/省电模式。
+
+命令行版本：POSIX shell 兼容；可选 PowerShell 对象管道；脚本自动化、定时任务、远程 SSH；权限与 GUI 一致。
+
+开发/测试：工作区装 VMware，打包 ISO 安装；选 50 个兼容性好的应用 + 新增 50 个兼容性差的应用（共 100 个） 做运行测试，任何不渲染/不运算/报错/影响正常使用均算错误；模拟正常人使用全功能测试；自行 debug、修 bug、解决问题；建单元/集成/E2E 自动化测试、CI/CD、Benchmark、崩溃上报、开发者 SDK 与文档。
+
+发布/运营：建 GitHub 仓库上传源码，发布 0.0.1-beta；严禁上传 API Key、secret 等敏感信息；回复并修复反馈 bug；写 README、LICENSE（MIT/Apache 2.0）、CONTRIBUTING、CODE_OF_CONDUCT、CHANGELOG、Issue/PR 模板；用 Python 制作宣发视频；提供镜像下载 + SHA256；建社区渠道与版本路线图。
+
+合规：不违反 Apple/Google/微软/华为许可；不内置未授权闭源代码；声明兼容层与原生界限；遵守开源协议；出口与加密合规。
+
+优先级：P0 骨架+权限+可启动内核+README+.gitignore+LICENSE；P1 命令行+构建+CI+视频脚本；P2 驱动+FS+网络+图形；P3 多架构原生运行+100 应用测试+ISO；P4 SDK+商店+社区。
+
+回复要求：每阶段输出「已完成/待办/已知问题/下一步」；无法完成须诚实说明不得编造测试结果；代码可编译可运行有注释；敏感信息不得入库
