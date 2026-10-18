@@ -1,5 +1,5 @@
 #include "shell.h"
-#include "keyboard.h"
+#include "input.h"
 #include "console.h"
 #include "permission.h"
 #include "types.h"
@@ -9,7 +9,7 @@ static int streq(const char* a, const char* b) { while (*a && *b) { if (*a != *b
 void shell_run(void) {
     char buf[64];
     uint32_t len = 0;
-    perm_level_t current_level = PERM_USER;
+    perm_level_type current_level = PERM_USER;
 
     console_puts("\nWLHIOS shell initialized. Type 'help'.\n");
     
@@ -18,10 +18,12 @@ void shell_run(void) {
         len = 0;
 
         while (1) {
-            char c = keyboard_getchar();
+            // 轮询串口（仅 UTM 等环境需要，放在这里调用，而不是放进键盘驱动里）
+            console_poll_input();
+
+            char c = input_getchar();
             if (c == 0) {
-                // 如果没有按键，执行 hlt 让 CPU 休眠，等待下一次中断（如时钟、键盘）
-                __asm__ volatile("hlt");
+                __asm__ volatile("hlt"); // 没输入就休眠，等待中断唤醒
                 continue;
             }
 
