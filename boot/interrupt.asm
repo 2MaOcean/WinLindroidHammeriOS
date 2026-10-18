@@ -1,42 +1,81 @@
 section .text
 extern idt_handler
 
-; 宏：没有错误码的中断
 %macro ISR_NOERR 1
 global isr%1
 isr%1:
     cli
-    push dword 0      ; 压入假错误码
-    push dword %1     ; 压入中断号
+    push dword 0
+    push dword %1
     jmp isr_common_stub
 %endmacro
 
-ISR_NOERR 32          ; 时钟中断
-ISR_NOERR 33          ; 键盘中断
+%macro ISR_ERR 1
+global isr%1
+isr%1:
+    cli
+    push dword %1
+    jmp isr_common_stub
+%endmacro
+
+ISR_NOERR 0
+ISR_NOERR 1
+ISR_NOERR 2
+ISR_NOERR 3
+ISR_NOERR 4
+ISR_NOERR 5
+ISR_NOERR 6
+ISR_NOERR 7
+ISR_ERR   8
+ISR_NOERR 9
+ISR_ERR   10
+ISR_ERR   11
+ISR_ERR   12
+ISR_ERR   13
+ISR_ERR   14
+ISR_NOERR 15
+ISR_NOERR 16
+ISR_ERR   17
+ISR_NOERR 18
+ISR_NOERR 19
+ISR_NOERR 20
+ISR_NOERR 21
+ISR_NOERR 22
+ISR_NOERR 23
+ISR_NOERR 24
+ISR_NOERR 25
+ISR_NOERR 26
+ISR_NOERR 27
+ISR_NOERR 28
+ISR_NOERR 29
+ISR_ERR   30
+ISR_NOERR 31
+
+; 硬件中断 (32, 33, 128)
+ISR_NOERR 32
+ISR_NOERR 33
+ISR_NOERR 128
 
 global isr_common_stub
 isr_common_stub:
-    pusha             ; 保存通用寄存器
-
+    pusha
     mov ax, ds
-    push eax          ; 保存数据段 (按 32 位压栈)
-
-    mov ax, 0x10      ; 加载内核数据段
+    push eax
+    mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
 
-    push esp          ; 传递栈指针给 C 语言
+    push esp
     call idt_handler
-    add esp, 4        ; 清理参数
+    add esp, 4
 
-    pop eax           ; 恢复数据段
+    pop eax
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-
-    popa              ; 恢复通用寄存器
-    add esp, 8        ; 弹出中断号和错误码
+    popa
+    add esp, 8
     iret
