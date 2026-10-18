@@ -1,19 +1,8 @@
 #include "keyboard.h"
 #include "types.h"
-
-static inline uint8_t inb(uint16_t port) {
-    uint8_t ret;
-    __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
-}
-
+static inline uint8_t inb(uint16_t port) { uint8_t ret; __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port)); return ret; }
 char keyboard_getchar(void) {
-    // 1. 优先检查串口是否有输入 (COM1 的 0x3F8, 状态在 0x3FD)
-    if (inb(0x3FD) & 1) {
-        return inb(0x3F8);
-    }
-
-    // 2. 检查 PS/2 键盘 (如果 VGA 模式可用的话)
+    if (inb(0x3FD) & 1) return inb(0x3F8);
     if (inb(0x64) & 1) {
         uint8_t scancode = inb(0x60);
         if (scancode < 0x80) {
