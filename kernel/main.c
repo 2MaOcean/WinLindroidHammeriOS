@@ -7,14 +7,14 @@
 #include "vmm.h"
 #include "heap.h"
 #include "vfs.h"
+#include "auth.h"
 #include "multiboot2.h"
 #include "types.h"
 
 void kernel_main(uint32_t magic, uint32_t mb_info) {
     console_init(); 
     console_puts("\nWinLindroidHammeriOS P2 Kernel\n");
-    console_puts("===============================\n");
-
+    
     uint8_t* mbi = (uint8_t*)mb_info;
     uint32_t mem_upper = 0;
     struct multiboot_tag* tag = (struct multiboot_tag*)(mbi + 8);
@@ -32,22 +32,18 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
     gdt_init();
     pmm_init(mem_upper);
     vmm_init();
-    
     heap_init();
     vfs_init();
-
-    // 测试 kmalloc
-    char* test_str = (char*)kmalloc(32);
-    test_str[0] = 'O'; test_str[1] = 'K'; test_str[2] = '\0';
-    console_puts("[TEST] kmalloc string: ");
-    console_puts(test_str);
-    console_puts("\n");
-    kfree(test_str);
+    auth_init();
 
     pic_init();
     idt_init();
     pit_init();
 
-    console_puts("\n[SYS] Kernel init complete.\n\n");
-    shell_run();
+    perm_level_t current_level = PERM_USER;
+    while(1) {
+        if (auth_login(&current_level)) {
+            shell_run(current_level);
+        }
+    }
 }
