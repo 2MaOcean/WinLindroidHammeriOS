@@ -19,14 +19,17 @@ void shell_run(void) {
 
         while (1) {
             char c = keyboard_getchar();
-            if (c == 0) continue;
+            if (c == 0) {
+                // 如果没有按键，执行 hlt 让 CPU 休眠，等待下一次中断（如时钟、键盘）
+                __asm__ volatile("hlt");
+                continue;
+            }
 
-            // 同时兼容 \n 和 \r 作为回车
             if (c == '\n' || c == '\r') {
                 console_putc('\n');
                 buf[len] = '\0';
                 break;
-            } else if (c == '\b' || c == 0x7F) { // 兼容退格键
+            } else if (c == '\b' || c == 0x7F) {
                 if (len > 0) {
                     len--;
                     console_puts("\b \b");

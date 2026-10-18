@@ -7,33 +7,35 @@ static inline void outb(uint16_t port, uint8_t val) {
 }
 static inline uint8_t inb(uint16_t port) {
     uint8_t ret;
-    __asm__ volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+    __asm__ volatile ( "inb %1, %0" : : "=a"(ret) : "Nd"(port) );
     return ret;
 }
 
 static void serial_init(void) {
-    outb(SERIAL_PORT + 1, 0x00);    // 禁用中断
-    outb(SERIAL_PORT + 3, 0x80);    // 启用 DLAB
-    outb(SERIAL_PORT + 0, 0x01);    // 115200 波特率除数低字节
-    outb(SERIAL_PORT + 1, 0x00);    // 除数高字节
+    outb(SERIAL_PORT + 1, 0x00);    
+    outb(SERIAL_PORT + 3, 0x80);    
+    outb(SERIAL_PORT + 0, 0x01);    // 115200
+    outb(SERIAL_PORT + 1, 0x00);    
     outb(SERIAL_PORT + 3, 0x03);    // 8N1
     outb(SERIAL_PORT + 2, 0xC7);    // 启用 FIFO
     outb(SERIAL_PORT + 4, 0x0B);
 }
 
 static void serial_putc(char c) {
-    int timeout = 100000;
-    while (timeout-- > 0 && (inb(SERIAL_PORT + 5) & 0x20) == 0); 
+    // 等待发送保持寄存器为空 (THRE, bit 5)
+    while ((inb(SERIAL_PORT + 5) & 0x20) == 0);
     outb(SERIAL_PORT, c);
+    // 等待发送器完全空 (TEMT, bit 6) —— 这能强制终端立刻接收数据
+    while ((inb(SERIAL_PORT + 5) & 0x40) == 0);
 }
 
-void console_init(void) { serial_init(); }
+void console_init(void) { 
+    serial_init(); 
+}
 
 void console_clear(void) {
-    // 用打出大量换行来模拟清屏，避免 ANSI 转义序列在部分终端乱码
-    for(int i = 0; i < 50; i++) {
-        serial_putc('\r'); serial_putc('\n');
-    }
+    // 发送 ANSI 转义序列清屏
+    console_puts("\033[2J\033[H");
 }
 
 void console_putc(char c) {
@@ -41,7 +43,9 @@ void console_putc(char c) {
     serial_putc(c);
 }
 
-void console_puts(const char* s) { while (*s) console_putc(*s++); }
+void console_puts(const char* s) { 
+    while (*s) console_putc(*s++); 
+}
 
 void console_puthex32(uint32_t v) {
     const char* h = "0123456789ABCDEF";
