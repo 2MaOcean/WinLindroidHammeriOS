@@ -1,3 +1,5 @@
+##注意:此项目由AI生成
+AI太好用了你知道吗
 # WinLindroidHammeriOS
 
 > 目标：一个全新的自主操作系统项目。  
