@@ -3,32 +3,66 @@
 #include "shell.h"
 #include "gdt.h"
 #include "idt.h"
+#include "pmm.h"
+#include "multiboot2.h"
 #include "types.h"
 
 void kernel_main(uint32_t magic, uint32_t mb_info) {
-    (void)magic;
-    (void)mb_info;
-
-    // 第一步：初始化串口并立刻打印（如果这行都看不到，说明串口驱动坏了，或者 GRUB 根本没引导内核）
     console_init(); 
-    console_puts("\n\n[TEST 0] Serial console initialized.\n");
+    console_puts("\n\nWinLindroidHammeriOS P2 Kernel\n");
+    console_puts("===============================\n");
 
-    console_puts("[TEST 1] Initializing GDT...\n");
-    gdt_init();
-    console_puts("[TEST 1] GDT init OK.\n");
+    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
+        console_puts("[ERR] Invalid Multiboot2 magic!\n");
+        while(1) __asm__ volatile("hlt");
+    }
 
-    console_puts("[TEST 2] Initializing PIC...\n");
-    pic_init();
-    console_puts("[TEST 2] PIC init OK.\n");
-
-    console_puts("[TEST 3] Initializing IDT and enabling interrupts...\n");
-    idt_init();
-    console_puts("[TEST 3] IDT init OK.\n");
+    // 解析 Multiboot2 标签
+    uint8_t* mbi = (uint8_t*)mb_info;
+    uint32_t mem_upper = 0;
     
-    console_puts("[TEST 4] Initializing PIT...\n");
-    pit_init();
-    console_puts("[TEST 4] PIT init OK.\n");
+    // 8 字节对齐跳过前 8 个字节（total_size 和 reserved）
+    struct multiboot_tag* tag = (struct multiboot_tag*)(mbi + 8);
+    while (tag->type != MULTIBOOT_TAG_TYPE_END) {
+        if (tag->type == MULTIBOOT_TAG_TYPE_MMAP) {
+            struct multiboot_tag_mmap* mmap = (struct multiboot_tag_mmap*)tag;
+            for (uint8_t* entry = (uint8_t*)mmap->entries; 
+                 entry < (uint8_t*)mmap + mmap->size; 
+                 entry += mmap->entry_size) {
+                struct multiboot_mmap_entry* e = (struct multiboot_mmap_entry*)entry;
+                if (e->type == MULTIBOOT_MEMORY_AVAILABLE) {
+                    // 找到最大的可用内存块
+                    if (e->addr + e->len > mem_upper) {
+                        mem_upper = e->addr + e->len;
+                    }
+                }
+            }
+        }
+        // 标签按 8 字节对齐
+        tag = (struct multiboot_tag*)((uint8_t*)tag + ((tag->size + 7) & ~7));
+    }
 
-    console_puts("[SYS] All hardware initialized. Starting Shell...\n\n");
+    console_puts("[HW]  Detected Physical Memory: ");
+    console_put_dec(mem_upper / 1024 / 1024);
+    console_puts(" MB\n");
+
+    console_puts("[CPU] Initializing GDT...\n");
+    gdt_init();
+
+    console_puts("[MEM] Initializing Physical Memory Manager (Bitmap)...\n");
+    pmm_init(mem_upper);
+
+    // 测试分配内存
+    void* p1 = pmm_alloc_page();
+    console_puts("[MEM] Allocated 1 page at: ");
+    console_puthex32((uint32_t)p1);
+    console_puts("\n");
+
+    console_puts("[CPU] Initializing PIC & IDT...\n");
+    pic_init();
+    idt_init();
+    pit_init();
+
+    console_puts("[SYS] Kernel init complete. Dropping to shell.\n\n");
     shell_run();
 }
