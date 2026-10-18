@@ -1,8 +1,9 @@
 name: build-iso-v2
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: 
+      - '**'        # 匹配所有分支，任何分支 push 都会自动打包
+  workflow_dispatch: # 保留手动触发
 
 jobs:
   build:
