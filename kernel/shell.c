@@ -9,7 +9,7 @@ static int streq(const char* a, const char* b) { while (*a && *b) { if (*a != *b
 void shell_run(void) {
     char buf[64];
     uint32_t len = 0;
-    perm_level_type current_level = PERM_USER;
+    perm_level_t current_level = PERM_USER;
 
     console_puts("\nWLHIOS shell initialized. Type 'help'.\n");
     
