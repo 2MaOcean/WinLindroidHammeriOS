@@ -76,3 +76,32 @@ void vfs_list(void) {
         child = child->next_sibling;
     }
 }
+
+int vfs_write(fs_node_t* node, const char* buffer, uint32_t size) {
+    if (!node || node->flags != VFS_FILE) return -1;
+    
+    // 如果之前有数据，先释放
+    if (node->data) kfree(node->data);
+    
+    // 分配新内存并复制数据
+    node->data = kmalloc(size + 1);
+    if (!node->data) return -1;
+    
+    for (uint32_t i = 0; i < size; i++) {
+        ((char*)node->data)[i] = buffer[i];
+    }
+    ((char*)node->data)[size] = '\0'; // 确保字符串结束
+    node->size = size;
+    return 0;
+}
+
+int vfs_read(fs_node_t* node, char* buffer, uint32_t max_size) {
+    if (!node || node->flags != VFS_FILE || !node->data) return -1;
+    
+    uint32_t read_size = node->size < max_size - 1 ? node->size : max_size - 1;
+    for (uint32_t i = 0; i < read_size; i++) {
+        buffer[i] = ((char*)node->data)[i];
+    }
+    buffer[read_size] = '\0';
+    return read_size;
+}
