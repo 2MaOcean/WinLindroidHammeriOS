@@ -1,4 +1,4 @@
-name: build-iso
+name: build-iso-v2
 on:
   push:
     branches: [main]
