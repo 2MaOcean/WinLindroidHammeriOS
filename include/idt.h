@@ -6,5 +6,6 @@ void idt_init(void);
 void pic_init(void);
 void pit_init(void);
 extern void keyboard_interrupt_handler(void);
-
+extern void isr32(void);
+extern void isr33(void);
 #endif
