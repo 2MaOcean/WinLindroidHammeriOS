@@ -14,8 +14,8 @@ static inline uint8_t inb(uint16_t port) {
 static void serial_init(void) {
     outb(SERIAL_PORT + 1, 0x00);    // 禁用中断
     outb(SERIAL_PORT + 3, 0x80);    // 启用 DLAB
-    outb(SERIAL_PORT + 0, 0x01);    // 115200 波特率
-    outb(SERIAL_PORT + 1, 0x00);    
+    outb(SERIAL_PORT + 0, 0x01);    // 115200 波特率除数低字节
+    outb(SERIAL_PORT + 1, 0x00);    // 除数高字节
     outb(SERIAL_PORT + 3, 0x03);    // 8N1
     outb(SERIAL_PORT + 2, 0xC7);    // 启用 FIFO
     outb(SERIAL_PORT + 4, 0x0B);
@@ -30,13 +30,15 @@ static void serial_putc(char c) {
 void console_init(void) { serial_init(); }
 
 void console_clear(void) {
-    serial_putc('\033'); serial_putc('['); serial_putc('2'); serial_putc('J');
-    serial_putc('\033'); serial_putc('['); serial_putc('H');
+    // 用打出大量换行来模拟清屏，避免 ANSI 转义序列在部分终端乱码
+    for(int i = 0; i < 50; i++) {
+        serial_putc('\r'); serial_putc('\n');
+    }
 }
 
 void console_putc(char c) {
     if (c == '\n') serial_putc('\r');
-    serial_putc(c); // 彻底抛弃 0xB8000
+    serial_putc(c);
 }
 
 void console_puts(const char* s) { while (*s) console_putc(*s++); }
