@@ -3,7 +3,7 @@ CC ?= gcc
 LD ?= ld
 CFLAGS := -m32 -ffreestanding -fno-pie -fno-stack-protector -Wall -Wextra -O2 -Iinclude
 LDFLAGS := -m elf_i386 -T linker.ld
-OBJS := build/boot.o build/gdt.asm.o build/interrupt.asm.o build/gdt.o build/idt.o build/pmm.o build/vmm.o build/console.o build/input.o build/permission.o build/keyboard.o build/shell.o build/main.o
+OBJS := build/boot.o build/gdt.asm.o build/interrupt.asm.o build/gdt.o build/idt.o build/pmm.o build/vmm.o build/heap.o build/console.o build/input.o build/permission.o build/keyboard.o build/shell.o build/main.o
 
 all: build/wlhios-kernel.elf
 
@@ -34,7 +34,7 @@ build/idt.o: kernel/idt.c | build
 build/pmm.o: kernel/pmm.c | build
 >$(CC) $(CFLAGS) -c $< -o $@
 
-build/vmm.o: kernel/vmm.c | build
+build/vmm.o build/heap.o: kernel/vmm.c | build
 >$(CC) $(CFLAGS) -c $< -o $@
 
 build/permission.o: kernel/permission.c | build
@@ -60,3 +60,6 @@ iso: build/wlhios-kernel.elf
 
 clean:
 >rm -rf build
+
+build/heap.o: kernel/heap.c | build
+>$(CC) $(CFLAGS) -c $< -o $@

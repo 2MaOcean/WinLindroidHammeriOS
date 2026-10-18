@@ -5,6 +5,7 @@
 #include "idt.h"
 #include "pmm.h"
 #include "vmm.h"
+#include "heap.h"
 #include "multiboot2.h"
 #include "types.h"
 
@@ -27,20 +28,23 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
         tag = (struct multiboot_tag*)((uint8_t*)tag + ((tag->size + 7) & ~7));
     }
 
-    console_puts("[HW]  Detected Physical Memory: ");
-    console_put_dec(mem_upper / 1024 / 1024);
-    console_puts(" MB\n");
-
     gdt_init();
     pmm_init(mem_upper);
     vmm_init();
+    
+    heap_init(); // 初始化堆
+
+    // 测试 kmalloc
+    char* test_str = (char*)kmalloc(32);
+    test_str[0] = 'O'; test_str[1] = 'K'; test_str[2] = '\0';
+    console_puts("[TEST] kmalloc string: ");
+    console_puts(test_str);
+    console_puts("\n");
+    kfree(test_str);
 
     pic_init();
     idt_init();
     pit_init();
-
-    // 测试异常捕获（取消注释这行可以体验内核崩溃界面）
-    // int a = 1 / 0;
 
     console_puts("\n[SYS] Kernel init complete.\n\n");
     shell_run();
