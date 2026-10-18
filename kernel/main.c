@@ -6,6 +6,7 @@
 #include "pmm.h"
 #include "vmm.h"
 #include "heap.h"
+#include "vfs.h"
 #include "multiboot2.h"
 #include "types.h"
 
@@ -32,7 +33,8 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
     pmm_init(mem_upper);
     vmm_init();
     
-    heap_init(); // 初始化堆
+    heap_init();
+    vfs_init();
 
     // 测试 kmalloc
     char* test_str = (char*)kmalloc(32);
