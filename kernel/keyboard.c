@@ -1,16 +1,24 @@
 #include "keyboard.h"
 #include "types.h"
 
-static inline uint8_t inb(uint16_t port) {
-    uint8_t ret;
-    __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
+#define BUF_SIZE 256
+static char buffer[BUF_SIZE];
+static volatile int head = 0;
+static volatile int tail = 0;
+
+// 中断处理程序调用的入队函数
+void keyboard_push(char c) {
+    int next = (head + 1) % BUF_SIZE;
+    if (next != tail) {
+        buffer[head] = c;
+        head = next;
+    }
 }
 
+// Shell 调用的出队函数
 char keyboard_getchar(void) {
-    // 在调试阶段，只从 COM1 串口读取输入，彻底屏蔽 PS/2，防止双份输入乱码
-    if (inb(0x3FD) & 1) {
-        return inb(0x3F8);
-    }
-    return 0;
+    if (head == tail) return 0;
+    char c = buffer[tail];
+    tail = (tail + 1) % BUF_SIZE;
+    return c;
 }

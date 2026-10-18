@@ -2,8 +2,8 @@ name: build-iso-v2
 on:
   push:
     branches: 
-      - '**'        # 匹配所有分支，任何分支 push 都会自动打包
-  workflow_dispatch: # 保留手动触发
+      - '**'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential gcc-multilib \
-            grub-pc-bin grub-common xorriso mtools
+            nasm grub-pc-bin grub-common xorriso mtools
       - name: Build ISO
         run: make iso
       - name: Upload ISO
