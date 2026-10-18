@@ -1,20 +1,22 @@
 #include "console.h"
 #include "permission.h"
 #include "shell.h"
+#include "gdt.h"
 #include "types.h"
 
 void kernel_main(uint32_t magic, uint32_t mb_info) {
-    console_init(); // 初始化串口和屏幕
+    (void)magic;
+    (void)mb_info;
+
+    console_init(); 
     
-    console_puts("\n\nWinLindroidHammeriOS P1 kernel\n");
+    console_puts("\n\nWinLindroidHammeriOS P2 kernel\n");
     console_puts("===============================\n");
 
-    console_puts("Permission model:\n");
-    for (int i = PERM_RESTRICTED; i <= PERM_SUPERROOT; i++) {
-        console_puts(perm_level_name((perm_level_t)i));
-        console_puts("\n");
-    }
+    console_puts("Initializing GDT (Ring 0 & Ring 3)...\n");
+    gdt_init();
+    console_puts("GDT loaded successfully.\n\n");
 
-    // 进入交互式命令行
+    console_puts("Starting interactive shell...\n");
     shell_run();
 }
