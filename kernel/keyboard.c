@@ -10,7 +10,6 @@ static inline uint8_t inb(uint16_t port) { uint8_t r; __asm__ volatile("inb %1, 
 
 static int shift_pressed = 0;
 
-// 键盘扫描码映射表 (未按 Shift)
 static const char keymap_lower[] = {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -18,7 +17,6 @@ static const char keymap_lower[] = {
     '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' '
 };
 
-// 键盘扫描码映射表 (按了 Shift)
 static const char keymap_upper[] = {
     0,  27, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
     '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
@@ -35,27 +33,26 @@ void keyboard_push(char c) {
 }
 
 char keyboard_getchar(void) {
-    if (head == tail) return 0;
-    char c = buffer[tail];
-    tail = (tail + 1) % BUF_SIZE;
-    return c;
+    // 1. 优先从 PS/2 硬件中断的环形缓冲区读取
+    if (head != tail) {
+        char c = buffer[tail];
+        tail = (tail + 1) % BUF_SIZE;
+        return c;
+    }
+    
+    // 2. 兜底：如果在 UTM 串口终端里运行，直接轮询串口
+    if (inb(0x3FD) & 1) {
+        return inb(0x3F8);
+    }
+    
+    return 0;
 }
 
-// 真正的硬件中断处理程序
 void keyboard_interrupt_handler(void) {
     uint8_t scancode = inb(0x60);
 
-    // 处理 Shift 键按下/松开
-    if (scancode == 0x2A || scancode == 0x36) {
-        shift_pressed = 1;
-        return;
-    }
-    if (scancode == 0xAA || scancode == 0xB6) {
-        shift_pressed = 0;
-        return;
-    }
-
-    // 忽略松开按键 (最高位为 1)
+    if (scancode == 0x2A || scancode == 0x36) { shift_pressed = 1; return; }
+    if (scancode == 0xAA || scancode == 0xB6) { shift_pressed = 0; return; }
     if (scancode & 0x80) return;
 
     char c = 0;
